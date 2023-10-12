@@ -1,10 +1,10 @@
-encryptionsalt: v1:11ZkZ6kWkb4=:v1:qyGSrsmBsrf+zGFU:w50ZPmWuAfzJ+zrnqeo5pBjhCKdRqA==
+encryptionsalt: v1:+Zv+8bSwpHo=:v1:GRvPpF/VBLPwhbky:0YINjsZY/3VVBO7GexYGz4HfM44HQQ==
 config:
-  aws:profile: dev
-  aws:region: us-east-1 
+  aws:profile: demo
+  aws:region: us-east-1
   cidr_block: 10.0.0.0/16
-  vpc_name: "myvpc-dev"
-  myigw_name: "myigw-dev"
+  vpc_name: "myvpc-demo"
+  myigw_name: "myigw-demo"
   public_subnets_config : [
     {"name": "public-subnet-1", "cidr_block": "10.0.1.0/24", "az": "us-east-1a"},
     {"name": "public-subnet-2", "cidr_block": "10.0.2.0/24", "az": "us-east-1b"},

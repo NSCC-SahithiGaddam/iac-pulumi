@@ -2,6 +2,8 @@ import pulumi
 import pulumi_aws as aws
 
 config = pulumi.Config()
+vpc_name = config.require('vpc_name')
+igw_name = config.require('myigw_name')
 public_subnets_config = config.require_object('public_subnets_config')
 private_subnets_config = config.require_object('private_subnets_config')
 destination_route_cidr = config.require('destination_route_cidr')
@@ -9,18 +11,14 @@ destination_route_cidr = config.require('destination_route_cidr')
 create_vpc = aws.ec2.Vpc("main",
     cidr_block=config.require('cidr_block'),
     tags={
-        "Name": "myvpc-dev",
+        "Name": vpc_name,
     })
 
 create_igw = aws.ec2.InternetGateway("gw",
-    vpc_id=create_vpc.id,
+    vpc_id= create_vpc.id,
     tags={
-        "Name": "myigw-dev",
+        "Name": igw_name,
     })
-
-internet_gateway_attachment = aws.ec2.InternetGatewayAttachment("InternetGatewayAttachment",
-internet_gateway_id=create_igw.id,
-vpc_id=create_vpc.id)
 
 public_subnets = []
 private_subnets = []
@@ -42,17 +40,14 @@ for config in private_subnets_config:
     )
     private_subnets.append(subnet)
 
-get_internet_gateway = aws.ec2.get_internet_gateway(filters=[aws.ec2.GetInternetGatewayFilterArgs(
-    name="attachment.vpc-id",
-    values=[create_vpc.id],
-)])
+
 
 public_route_table = aws.ec2.RouteTable("public-route-table",
     vpc_id=create_vpc.id,
     routes=[
         aws.ec2.RouteTableRouteArgs(
             cidr_block=destination_route_cidr,
-            gateway_id=get_internet_gateway.id,
+            gateway_id=create_igw.id,
         )],
     tags={"Name": "public-route-table"},
 )
@@ -73,11 +68,10 @@ for n,subnet in enumerate(private_subnets, start=4):
     route_table_id=private_route_table.id,
     )
 
-pulumi.export('myvpc-dev', create_vpc.id)
-pulumi.export('myigw-dev', create_igw.id)
+pulumi.export(vpc_name, create_vpc.id)
+pulumi.export(igw_name, create_igw.id)
 for i, subnet in enumerate(public_subnets):
     pulumi.export(f'publicsubnet-{i + 1}', subnet.id)
 for i, subnet in enumerate(private_subnets):
     pulumi.export(f'privatesubnet-{i + 1}', subnet.id)
-
 
