@@ -5,7 +5,13 @@ config:
   cidr_block: 10.0.0.0/16
   vpc_name: "myvpc-dev"
   myigw_name: "myigw-dev"
-  ami_id: "ami-02b15a9be42e8cdbb"
+  ami_id: "ami-0054949425500a3da"
+  ssh_cidr_blocks: ['73.218.147.89/32']
+  http_cidr_blocks: ['0.0.0.0/0']
+  https_cidr_blocks: ['0.0.0.0/0']
+  webport_cidr_blocks: ['0.0.0.0/0']
+  webapp_port: 3000
+  instance_type: "t2.micro"
   key_name: "appkey"
   public_subnets_config : [
     {"name": "public-subnet-1", "cidr_block": "10.0.1.0/24"},
