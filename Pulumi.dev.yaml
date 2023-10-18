@@ -1,10 +1,12 @@
-encryptionsalt: v1:11ZkZ6kWkb4=:v1:qyGSrsmBsrf+zGFU:w50ZPmWuAfzJ+zrnqeo5pBjhCKdRqA==
+encryptionsalt: v1:sYshDDmRW2Q=:v1:JlLHv2qrlNCTX1mN:BF5mr84Pjc7PUoH9VjR9vw9iXigUNQ==
 config:
   aws:profile: dev
   aws:region: us-east-1
   cidr_block: 10.0.0.0/16
   vpc_name: "myvpc-dev"
   myigw_name: "myigw-dev"
+  ami_id: "ami-02b15a9be42e8cdbb"
+  key_name: "appkey"
   public_subnets_config : [
     {"name": "public-subnet-1", "cidr_block": "10.0.1.0/24"},
     {"name": "public-subnet-2", "cidr_block": "10.0.2.0/24"},
