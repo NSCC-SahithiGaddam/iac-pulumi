@@ -2,10 +2,11 @@ encryptionsalt: v1:+Zv+8bSwpHo=:v1:GRvPpF/VBLPwhbky:0YINjsZY/3VVBO7GexYGz4HfM44H
 config:
   aws:profile: demo
   aws:region: us-west-1
-  
   cidr_block: 10.0.0.0/16
   vpc_name: "myvpc-demo"
   myigw_name: "myigw-demo"
+  ami_id: "ami-02b15a9be42e8cdbb"
+  key_name: "appkey"
   public_subnets_config : [
     {"name": "public-subnet-1", "cidr_block": "10.0.1.0/24"},
     {"name": "public-subnet-2", "cidr_block": "10.0.2.0/24"},
@@ -17,3 +18,4 @@ config:
     {"name": "private-subnet-3", "cidr_block": "10.0.6.0/24"},
   ]
   destination_route_cidr: 0.0.0.0/0
+  

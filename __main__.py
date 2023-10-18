@@ -11,6 +11,8 @@ igw_name = config.require('myigw_name')
 public_subnets_config = config.require_object('public_subnets_config')
 private_subnets_config = config.require_object('private_subnets_config')
 destination_route_cidr = config.require('destination_route_cidr')
+ami_id = config.require('ami_id')
+key_name = config.require('key_name')
 
 create_vpc = aws.ec2.Vpc("main",
     cidr_block=config.require('cidr_block'),
@@ -76,6 +78,58 @@ for n,subnet in enumerate(private_subnets, start=4):
     subnet_id=subnet.id,
     route_table_id=private_route_table.id,
     )
+
+my_sg = aws.ec2.SecurityGroup("application security group",
+    description="Allow SSH, HTTP, HTTPS, WEBAPP_PORT",
+    vpc_id=create_vpc.id,
+    ingress=[aws.ec2.SecurityGroupIngressArgs(
+        description="SSH",
+        from_port=22,
+        to_port=22,
+        protocol="tcp",
+        cidr_blocks=['155.33.132.45/32'],
+    ),
+    aws.ec2.SecurityGroupIngressArgs(
+        description="HTTP",
+        from_port=80,
+        to_port=80,
+        protocol="tcp",
+        cidr_blocks=['0.0.0.0/0'],
+    ),
+    aws.ec2.SecurityGroupIngressArgs(
+        description="HTTPS",
+        from_port=443,
+        to_port=443,
+        protocol="tcp",
+        cidr_blocks=["0.0.0.0/0"],
+    ),
+    aws.ec2.SecurityGroupIngressArgs(
+        description="WEBAPP_PORT",
+        from_port=3000,
+        to_port=3000,
+        protocol="tcp",
+        cidr_blocks=['0.0.0.0/0'],
+    )],
+    tags={
+        "Name": "application security group",
+    })
+
+my_instance = aws.ec2.Instance("my_instance", 
+    ami= ami_id,
+    instance_type="t2.micro",
+    security_groups=[my_sg.id],
+    subnet_id=public_subnets[0].id,
+    associate_public_ip_address=True,
+    key_name=key_name,
+    root_block_device={
+        "volume_size": 25,
+        "volume_type": "gp2",
+        "delete_on_termination": True,
+    },
+    tags={
+        "Name": "application instance",
+    }
+)
 
 pulumi.export(vpc_name, create_vpc.id)
 pulumi.export(igw_name, create_igw.id)
