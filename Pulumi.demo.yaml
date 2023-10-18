@@ -1,11 +1,17 @@
 encryptionsalt: v1:+Zv+8bSwpHo=:v1:GRvPpF/VBLPwhbky:0YINjsZY/3VVBO7GexYGz4HfM44HQQ==
 config:
   aws:profile: demo
-  aws:region: us-west-1
+  aws:region: us-east-1
   cidr_block: 10.0.0.0/16
-  vpc_name: "myvpc-demo"
-  myigw_name: "myigw-demo"
-  ami_id: "ami-02b15a9be42e8cdbb"
+  vpc_name: "myvpc-dev"
+  myigw_name: "myigw-dev"
+  ami_id: "ami-0054949425500a3da"
+  ssh_cidr_blocks: ['73.218.147.89/32']
+  http_cidr_blocks: ['0.0.0.0/0']
+  https_cidr_blocks: ['0.0.0.0/0']
+  webport_cidr_blocks: ['0.0.0.0/0']
+  webapp_port: 3000
+  instance_type: "t2.micro"
   key_name: "appkey"
   public_subnets_config : [
     {"name": "public-subnet-1", "cidr_block": "10.0.1.0/24"},
@@ -15,7 +21,7 @@ config:
   private_subnets_config : [
     {"name": "private-subnet-1", "cidr_block": "10.0.4.0/24"},
     {"name": "private-subnet-2", "cidr_block": "10.0.5.0/24"},
-    {"name": "private-subnet-3", "cidr_block": "10.0.6.0/24"},
+    {"name": "private-subnet-3", "cidr_block": "10.0.6.0/24"}
   ]
   destination_route_cidr: 0.0.0.0/0
   

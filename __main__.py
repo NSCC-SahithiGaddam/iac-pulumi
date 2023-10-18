@@ -8,11 +8,17 @@ private_subnets = []
 config = pulumi.Config()
 vpc_name = config.require('vpc_name')
 igw_name = config.require('myigw_name')
+webapp_port = config.require('webapp_port')
 public_subnets_config = config.require_object('public_subnets_config')
 private_subnets_config = config.require_object('private_subnets_config')
 destination_route_cidr = config.require('destination_route_cidr')
 ami_id = config.require('ami_id')
 key_name = config.require('key_name')
+http_cidr_blocks = config.require_object('http_cidr_blocks')
+https_cidr_blocks = config.require_object('https_cidr_blocks')
+webport_cidr_blocks = config.require_object('webport_cidr_blocks')
+ssh_cidr_blocks = config.require_object('ssh_cidr_blocks')
+instance_type = config.require('instance_type')
 
 create_vpc = aws.ec2.Vpc("main",
     cidr_block=config.require('cidr_block'),
@@ -87,28 +93,28 @@ my_sg = aws.ec2.SecurityGroup("application security group",
         from_port=22,
         to_port=22,
         protocol="tcp",
-        cidr_blocks=['155.33.132.45/32'],
+        cidr_blocks=ssh_cidr_blocks,
     ),
     aws.ec2.SecurityGroupIngressArgs(
         description="HTTP",
         from_port=80,
         to_port=80,
         protocol="tcp",
-        cidr_blocks=['0.0.0.0/0'],
+        cidr_blocks=http_cidr_blocks,
     ),
     aws.ec2.SecurityGroupIngressArgs(
         description="HTTPS",
         from_port=443,
         to_port=443,
         protocol="tcp",
-        cidr_blocks=["0.0.0.0/0"],
+        cidr_blocks=https_cidr_blocks,
     ),
     aws.ec2.SecurityGroupIngressArgs(
         description="WEBAPP_PORT",
-        from_port=3000,
-        to_port=3000,
+        from_port=webapp_port,
+        to_port=webapp_port,
         protocol="tcp",
-        cidr_blocks=['0.0.0.0/0'],
+        cidr_blocks=webport_cidr_blocks,
     )],
     tags={
         "Name": "application security group",
@@ -116,7 +122,7 @@ my_sg = aws.ec2.SecurityGroup("application security group",
 
 my_instance = aws.ec2.Instance("my_instance", 
     ami= ami_id,
-    instance_type="t2.micro",
+    instance_type=instance_type,
     security_groups=[my_sg.id],
     subnet_id=public_subnets[0].id,
     associate_public_ip_address=True,
