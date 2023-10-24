@@ -1,18 +1,18 @@
 encryptionsalt: v1:sYshDDmRW2Q=:v1:JlLHv2qrlNCTX1mN:BF5mr84Pjc7PUoH9VjR9vw9iXigUNQ==
 config:
   aws:profile: dev
-  aws:region: us-east-1
+  aws:region: us-west-1
   cidr_block: 10.0.0.0/16
   vpc_name: "myvpc-dev"
   myigw_name: "myigw-dev"
-  ami_id: "ami-0054949425500a3da"
+  ami_id: "ami-06b293519976c75b3"
   ssh_cidr_blocks: ['73.218.147.89/32']
   http_cidr_blocks: ['0.0.0.0/0']
   https_cidr_blocks: ['0.0.0.0/0']
   webport_cidr_blocks: ['0.0.0.0/0']
   webapp_port: 3000
   instance_type: "t2.micro"
-  key_name: "appkey"
+  key_name: "appkey-dev-west1"
   public_subnets_config : [
     {"name": "public-subnet-1", "cidr_block": "10.0.1.0/24"},
     {"name": "public-subnet-2", "cidr_block": "10.0.2.0/24"},
