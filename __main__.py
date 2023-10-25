@@ -19,6 +19,14 @@ https_cidr_blocks = config.require_object('https_cidr_blocks')
 webport_cidr_blocks = config.require_object('webport_cidr_blocks')
 ssh_cidr_blocks = config.require_object('ssh_cidr_blocks')
 instance_type = config.require('instance_type')
+ENV_FILE_PATH = config.require('ENV_FILE_PATH')
+DB_USER = config.require('DB_USER')
+DB_PASSWORD = config.require('DB_PASSWORD')
+DB_NAME = config.require('DB_NAME')
+rds_instance_class = config.require('rds_instance_class')
+rds_engine = config.require('rds_engine')
+rds_engine_version = config.require('rds_engine_version')
+rds_identifier = config.require('rds_identifier')
 
 create_vpc = aws.ec2.Vpc("main",
     cidr_block=config.require('cidr_block'),
@@ -159,18 +167,18 @@ database_subnet_group = aws.rds.SubnetGroup("database-subnet-group",
 
 database_instance = aws.rds.Instance("database instance",
     allocated_storage=20,
-    db_name="csye6225",
+    db_name=DB_NAME,
     db_subnet_group_name=database_subnet_group.name,
-    engine="mariadb",
-    engine_version="10.6",
-    identifier="csye6225",
-    instance_class="db.t2.micro",
+    engine=rds_engine,
+    engine_version=rds_engine_version,
+    identifier=rds_identifier,
+    instance_class=rds_instance_class,
     multi_az=False,
     publicly_accessible= False,
     parameter_group_name=mariadb_parameter_group.name,
-    password="passworD99",
+    password=DB_PASSWORD,
     skip_final_snapshot=True,
-    username="csye6225",
+    username=DB_USER,
     vpc_security_group_ids=[database_sg.id])
 db_endpoint = database_instance.endpoint.apply(lambda endpoint: f'{endpoint}')
 
@@ -192,23 +200,22 @@ my_instance = aws.ec2.Instance("my_instance",
     user_data = pulumi.Output.all(db_endpoint = database_instance.endpoint
     ).apply(
         lambda  args: f"""#!/bin/bash
-export DB_USER=csye6225
-export DB_PASSWORD=passworD99
-export DB_HOST={args["db_endpoint"].split(":")[0]}
-export PORT=3000
-export DB_DIALECT=mysql
-export CSV_FILE=/opt/Users.csv
-export DB_NAME=csye6225
+NEW_DB_USER={DB_USER}
+NEW_DB_PASSWORD={DB_PASSWORD}
+NEW_DB_HOST={args["db_endpoint"].split(":")[0]}
+NEW_DB_NAME={DB_NAME}
+ENV_FILE_PATH={ENV_FILE_PATH}
 
-cat <<EOF > /home/admin/webapp/.env
-DB_USER=$DB_USER
-DB_PASSWORD=$DB_PASSWORD
-DB_HOST=$DB_HOST
-PORT=$PORT
-DB_DIALECT=$DB_DIALECT
-CSV_FILE=$CSV_FILE
-DB_NAME=$DB_NAME
-EOF""",
+if [ -e "$ENV_FILE_PATH" ]; then
+sed -i -e "s/DB_HOST=.*/DB_HOST=$NEW_DB_HOST/" \
+-e "s/DB_USER=.*/DB_USER=$NEW_DB_USER/" \
+-e "s/DB_PASSWORD=.*/DB_PASSWORD=$NEW_DB_PASSWORD/" \
+-e "s/DB_NAME=.*/DB_NAME=$NEW_DB_NAME/" \
+"$ENV_FILE_PATH"
+echo "Success"
+else
+echo "$ENV_FILE_PATH not found. Make sure the .env file exists"
+fi"""
     )
 )
 
