@@ -5,7 +5,7 @@ config:
   cidr_block: 10.0.0.0/16
   vpc_name: "myvpc-dev"
   myigw_name: "myigw-dev"
-  ami_id: "ami-06b293519976c75b3"
+  ami_id: "ami-018fa8657a4f2d101"
   ssh_cidr_blocks: ['73.218.147.89/32']
   http_cidr_blocks: ['0.0.0.0/0']
   https_cidr_blocks: ['0.0.0.0/0']
@@ -24,3 +24,11 @@ config:
     {"name": "private-subnet-3", "cidr_block": "10.0.6.0/24"}
   ]
   destination_route_cidr: 0.0.0.0/0
+  ENV_FILE_PATH: "/opt/csye6225/webapp/.env"
+  DB_USER: csye6225
+  DB_PASSWORD: passworD99
+  DB_NAME: csye6225
+  rds_instance_class: "db.t2.micro"
+  rds_engine: "mariadb"
+  rds_engine_version: "10.6"
+  rds_identifier: "csye6225"
