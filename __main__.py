@@ -1,5 +1,6 @@
 import pulumi
 import pulumi_aws as aws
+import json
 
 zones = []
 public_subnets = []
@@ -182,6 +183,30 @@ database_instance = aws.rds.Instance("database instance",
     vpc_security_group_ids=[database_sg.id])
 db_endpoint = database_instance.endpoint.apply(lambda endpoint: f'{endpoint}')
 
+cloud_watch_role = aws.iam.Role("cloudwatchRole",
+    assume_role_policy=json.dumps({
+        "Version": "2012-10-17",
+        "Statement": [{
+            "Action": "sts:AssumeRole",
+            "Effect": "Allow",
+            "Sid": "",
+            "Principal": {
+                "Service": "ec2.amazonaws.com",
+            },
+        }],
+    }),
+    tags={
+        "name": "cloudwatchRole",
+    })
+
+cloudWatchAgentPolicyAttachment = aws.iam.PolicyAttachment("cloudWatchAgentPolicyAttachment", 
+    policy_arn= "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
+    roles= [cloud_watch_role.name],
+)
+
+instance_profile = aws.iam.InstanceProfile("instanceProfile", role=cloud_watch_role.name)
+
+
 my_instance = aws.ec2.Instance("my_instance", 
     ami= ami_id,
     instance_type=instance_type,
@@ -189,6 +214,7 @@ my_instance = aws.ec2.Instance("my_instance",
     subnet_id=public_subnets[0],
     associate_public_ip_address=True,
     key_name=key_name,
+    iam_instance_profile= instance_profile.name,
     root_block_device={
         "volume_size": 25,
         "volume_type": "gp2",
@@ -215,9 +241,25 @@ sed -i -e "s/DB_HOST=.*/DB_HOST=$NEW_DB_HOST/" \
 echo "Success"
 else
 echo "$ENV_FILE_PATH not found. Make sure the .env file exists"
-fi"""
+fi
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+    -a fetch-config \
+    -m ec2 \
+    -c file:/opt/csye6225/webapp/cloudwatch-config.json \
+    -s"""
     )
 )
+
+selected = aws.route53.get_zone(name="dev.csyenscc.me",
+    private_zone=False)
+www = aws.route53.Record("www",
+    zone_id=selected.zone_id,
+    name=f"{selected.name}",
+    type="A",
+    ttl=300,
+    records=[my_instance.public_ip])
+
+
 
 pulumi.export(vpc_name, create_vpc.id)
 pulumi.export(igw_name, create_igw.id)
