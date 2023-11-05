@@ -5,7 +5,7 @@ config:
   cidr_block: 10.0.0.0/16
   vpc_name: "myvpc-demo"
   myigw_name: "myigw-demo"
-  ami_id: "ami-018fa8657a4f2d101"
+  ami_id: "ami-05af325770865a87a"
   ssh_cidr_blocks: ['73.218.147.89/32']
   http_cidr_blocks: ['0.0.0.0/0']
   https_cidr_blocks: ['0.0.0.0/0']
