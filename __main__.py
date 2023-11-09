@@ -28,6 +28,7 @@ rds_instance_class = config.require('rds_instance_class')
 rds_engine = config.require('rds_engine')
 rds_engine_version = config.require('rds_engine_version')
 rds_identifier = config.require('rds_identifier')
+domain_name = config.require('domain_name')
 
 create_vpc = aws.ec2.Vpc("main",
     cidr_block=config.require('cidr_block'),
@@ -250,7 +251,7 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
     )
 )
 
-selected = aws.route53.get_zone(name="dev.csyenscc.me",
+selected = aws.route53.get_zone(name=domain_name,
     private_zone=False)
 www = aws.route53.Record("www",
     zone_id=selected.zone_id,

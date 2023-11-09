@@ -32,3 +32,4 @@ config:
   rds_engine: "mariadb"
   rds_engine_version: "10.6"
   rds_identifier: "csye6225"
+  domain_name: "dev.csyenscc.me"
