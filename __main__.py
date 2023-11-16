@@ -285,7 +285,14 @@ asg = aws.autoscaling.Group("asg",
     launch_template=aws.autoscaling.GroupLaunchTemplateArgs(
         id=my_instance_template.id,
         version="$Latest",
-    ))
+    ),
+    tags=[
+        aws.autoscaling.GroupTagArgs(
+            key='Name',
+            value='application instance',
+            propagate_at_launch=True,
+        )
+    ])
 
 scale_up_policy = aws.autoscaling.Policy("scale-up-policy",
     scaling_adjustment=1,
@@ -303,7 +310,7 @@ scale_down_policy = aws.autoscaling.Policy("scale-down-policy",
 
 scale_up_alarm = aws.cloudwatch.MetricAlarm("scale-up-alarm",
     comparison_operator="GreaterThanOrEqualToThreshold",
-    evaluation_periods=2,
+    evaluation_periods=1,
     metric_name="CPUUtilization",
     namespace="AWS/EC2",
     period=300,
@@ -317,7 +324,7 @@ scale_up_alarm = aws.cloudwatch.MetricAlarm("scale-up-alarm",
 
 scale_down_alarm = aws.cloudwatch.MetricAlarm("scale-down-alarm",
     comparison_operator="LessThanOrEqualToThreshold",
-    evaluation_periods=2,
+    evaluation_periods=1,
     metric_name="CPUUtilization",
     namespace="AWS/EC2",
     period=300,
@@ -360,48 +367,7 @@ asg_lb_attachment = aws.autoscaling.Attachment("asg_lb_attachment",
     autoscaling_group_name=asg.id,
     lb_target_group_arn=targetGroup.arn)
 
-# my_instance = aws.ec2.Instance("my_instance", 
-#     ami= ami_id,
-#     instance_type=instance_type,
-#     security_groups=[application_sg.id],
-#     subnet_id=public_subnets[0],
-#     associate_public_ip_address=True,
-#     key_name=key_name,
-#     iam_instance_profile= instance_profile.name,
-#     root_block_device={
-#         "volume_size": 25,
-#         "volume_type": "gp2",
-#         "delete_on_termination": True,
-#     },
-#     tags={
-#         "Name": "application instance",
-#     },
-#     user_data = pulumi.Output.all(db_endpoint = database_instance.endpoint
-#     ).apply(
-#         lambda  args: f"""#!/bin/bash
-# NEW_DB_USER={DB_USER}
-# NEW_DB_PASSWORD={DB_PASSWORD}
-# NEW_DB_HOST={args["db_endpoint"].split(":")[0]}
-# NEW_DB_NAME={DB_NAME}
-# ENV_FILE_PATH={ENV_FILE_PATH}
 
-# if [ -e "$ENV_FILE_PATH" ]; then
-# sed -i -e "s/DB_HOST=.*/DB_HOST=$NEW_DB_HOST/" \
-# -e "s/DB_USER=.*/DB_USER=$NEW_DB_USER/" \
-# -e "s/DB_PASSWORD=.*/DB_PASSWORD=$NEW_DB_PASSWORD/" \
-# -e "s/DB_NAME=.*/DB_NAME=$NEW_DB_NAME/" \
-# "$ENV_FILE_PATH"
-# echo "Success"
-# else
-# echo "$ENV_FILE_PATH not found. Make sure the .env file exists"
-# fi
-# sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-#     -a fetch-config \
-#     -m ec2 \
-#     -c file:/opt/csye6225/webapp/cloudwatch-config.json \
-#     -s"""
-#     )
-# )
 
 selected = aws.route53.get_zone(name=domain_name,
     private_zone=False)
