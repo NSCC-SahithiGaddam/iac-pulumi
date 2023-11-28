@@ -1,5 +1,6 @@
 import pulumi
 import pulumi_aws as aws
+import pulumi_gcp as gcp
 import json
 import base64
 
@@ -30,6 +31,25 @@ rds_engine = config.require('rds_engine')
 rds_engine_version = config.require('rds_engine_version')
 rds_identifier = config.require('rds_identifier')
 domain_name = config.require('domain_name')
+
+
+gcs_bucket = gcp.storage.Bucket("gcs_bucket",
+    name= 'demobucketsahithi1',
+    force_destroy=True,
+    location="US",
+    public_access_prevention='enforced',
+    versioning=gcp.storage.BucketVersioningArgs(
+        enabled=True
+    ))
+
+service_account = gcp.serviceaccount.Account("serviceAccount",
+    account_id="dev-service-account-id",
+    display_name="Service Account")
+
+access_key = gcp.serviceaccount.Key("access-key",
+    service_account_id=service_account.name,
+    public_key_type="TYPE_X509_PEM_FILE",
+    private_key_type="TYPE_GOOGLE_CREDENTIALS_FILE")
 
 create_vpc = aws.ec2.Vpc("main",
     cidr_block=config.require('cidr_block'),
@@ -95,6 +115,73 @@ for n,subnet_id in enumerate(private_subnets, start=4):
     subnet_id=subnet_id,
     route_table_id=private_route_table.id,
     )
+    
+sns_topic = aws.sns.Topic("sns-topic",
+    display_name = 'testSNS'
+)
+dynamodb_table = aws.dynamodb.Table("dynamodb-table",
+    name = 'testtable',
+    attributes=[
+        aws.dynamodb.TableAttributeArgs(
+            name="UserEmail",
+            type="S",
+        )
+    ],
+    billing_mode="PROVISIONED",
+    hash_key="UserEmail",
+    read_capacity=20,
+    tags={
+        "Environment": "dev",
+        "Name": "testtable",
+    },
+    write_capacity=20)
+
+iam_for_lambda = aws.iam.Role("my-iam-role",
+    assume_role_policy="""{
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": "lambda.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
+            }
+        ]
+    }""")
+
+role_policy_attachment_dynamodb = aws.iam.RolePolicyAttachment("my-iam-role-policy",
+    policy_arn="arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess",
+    role=iam_for_lambda.name)
+role_policy_attachment_lambda = aws.iam.RolePolicyAttachment('lambdaRolePolicy',
+    role=iam_for_lambda.name,
+    policy_arn='arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+)
+
+testLambda = aws.lambda_.Function("testLambda",
+    code=pulumi.FileArchive("./../serverless/Archive.zip"),
+    role=iam_for_lambda.arn,
+    handler="index.handler",
+    runtime="nodejs20.x",
+    environment=aws.lambda_.FunctionEnvironmentArgs(
+        variables={
+            "GCS_BUCKET_NAME": gcs_bucket.name,
+            "MAILGUN_API_KEY": "1cbbf5398d1f07504fdce143074e1296-30b58138-110fb265",
+            "MAILGUN_DOMAIN": "csyenscc.me",
+            "GCP_KEY": access_key.private_key,
+            "DYNAMODB_NAME": dynamodb_table.name
+        },
+    ))
+
+with_sns = aws.lambda_.Permission("withSns",
+    action="lambda:InvokeFunction",
+    function=testLambda.name,
+    principal="sns.amazonaws.com",
+    source_arn=sns_topic.arn)
+lambda_sns_subscription = aws.sns.TopicSubscription("lambda-sns-subscription",
+    topic=sns_topic.arn,
+    protocol="lambda",
+    endpoint=testLambda.arn)
 
 loadbalancer_sg = aws.ec2.SecurityGroup("loadbalancer security group",
     description="Allow SSH, HTTP, HTTPS, WEBAPP_PORT",
@@ -241,7 +328,8 @@ my_instance_template = aws.ec2.LaunchTemplate("my_instance_template",
     iam_instance_profile=aws.ec2.LaunchTemplateIamInstanceProfileArgs(
         name=instance_profile.name,
     ),
-    user_data = pulumi.Output.all(db_endpoint = database_instance.endpoint
+    user_data = pulumi.Output.all(db_endpoint = database_instance.endpoint,
+    sns_arn = sns_topic.arn
     ).apply(
         lambda  args: base64.b64encode(f"""#!/bin/bash
 NEW_DB_USER={DB_USER}
@@ -249,6 +337,7 @@ NEW_DB_PASSWORD={DB_PASSWORD}
 NEW_DB_HOST={args["db_endpoint"].split(":")[0]}
 NEW_DB_NAME={DB_NAME}
 ENV_FILE_PATH={ENV_FILE_PATH}
+SNS_TOPIC_ARN={args["sns_arn"]}
 
 if [ -e "$ENV_FILE_PATH" ]; then
 sed -i -e "s/DB_HOST=.*/DB_HOST=$NEW_DB_HOST/" \
