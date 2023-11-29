@@ -9,6 +9,7 @@ public_subnets = []
 private_subnets = []
 
 config = pulumi.Config()
+aws_region = config.require('AWS_REGION')
 vpc_name = config.require('vpc_name')
 igw_name = config.require('myigw_name')
 webapp_port = config.require('webapp_port')
@@ -45,6 +46,11 @@ gcs_bucket = gcp.storage.Bucket("gcs_bucket",
 service_account = gcp.serviceaccount.Account("serviceAccount",
     account_id="dev-service-account-id",
     display_name="Service Account")
+
+bucket_iam = gcp.storage.BucketIAMMember("bucketIAMMember",
+    bucket=gcs_bucket.name,
+    role="roles/storage.objectAdmin",
+    member=pulumi.Output.concat("serviceAccount:", service_account.email))
 
 access_key = gcp.serviceaccount.Key("access-key",
     service_account_id=service_account.name,
@@ -157,12 +163,12 @@ role_policy_attachment_lambda = aws.iam.RolePolicyAttachment('lambdaRolePolicy',
     role=iam_for_lambda.name,
     policy_arn='arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
 )
-
 testLambda = aws.lambda_.Function("testLambda",
     code=pulumi.FileArchive("./../serverless/Archive.zip"),
     role=iam_for_lambda.arn,
     handler="index.handler",
     runtime="nodejs20.x",
+    timeout=60,
     environment=aws.lambda_.FunctionEnvironmentArgs(
         variables={
             "GCS_BUCKET_NAME": gcs_bucket.name,
@@ -285,7 +291,7 @@ database_instance = aws.rds.Instance("database instance",
     vpc_security_group_ids=[database_sg.id])
 db_endpoint = database_instance.endpoint.apply(lambda endpoint: f'{endpoint}')
 
-cloud_watch_role = aws.iam.Role("cloudwatchRole",
+ec2_role = aws.iam.Role("ec2Role",
     assume_role_policy=json.dumps({
         "Version": "2012-10-17",
         "Statement": [{
@@ -303,10 +309,14 @@ cloud_watch_role = aws.iam.Role("cloudwatchRole",
 
 cloudWatchAgentPolicyAttachment = aws.iam.PolicyAttachment("cloudWatchAgentPolicyAttachment", 
     policy_arn= "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
-    roles= [cloud_watch_role.name],
+    roles= [ec2_role.name],
+)
+SNSPolicyAttachment = aws.iam.PolicyAttachment("SNSPolicyAttachment", 
+    policy_arn= "arn:aws:iam::aws:policy/AmazonSNSFullAccess",
+    roles= [ec2_role.name],
 )
 
-instance_profile = aws.iam.InstanceProfile("instanceProfile", role=cloud_watch_role.name)
+instance_profile = aws.iam.InstanceProfile("instanceProfile", role=ec2_role.name)
 
 my_instance_template = aws.ec2.LaunchTemplate("my_instance_template",
     block_device_mappings=[aws.ec2.LaunchTemplateBlockDeviceMappingArgs(
@@ -337,15 +347,17 @@ NEW_DB_PASSWORD={DB_PASSWORD}
 NEW_DB_HOST={args["db_endpoint"].split(":")[0]}
 NEW_DB_NAME={DB_NAME}
 ENV_FILE_PATH={ENV_FILE_PATH}
-SNS_TOPIC_ARN={args["sns_arn"]}
+NEW_SNS_TOPIC_ARN={args["sns_arn"]}
+NEW_AWS_REGION={aws_region}
 
 if [ -e "$ENV_FILE_PATH" ]; then
 sed -i -e "s/DB_HOST=.*/DB_HOST=$NEW_DB_HOST/" \
 -e "s/DB_USER=.*/DB_USER=$NEW_DB_USER/" \
 -e "s/DB_PASSWORD=.*/DB_PASSWORD=$NEW_DB_PASSWORD/" \
 -e "s/DB_NAME=.*/DB_NAME=$NEW_DB_NAME/" \
+-e "s/SNS_TOPIC_ARN=.*/SNS_TOPIC_ARN=$NEW_SNS_TOPIC_ARN/" \
+-e "s/AWS_REGION=.*/AWS_REGION=$NEW_AWS_REGION/" \
 "$ENV_FILE_PATH"
-echo "Success"
 else
 echo "$ENV_FILE_PATH not found. Make sure the .env file exists"
 fi
