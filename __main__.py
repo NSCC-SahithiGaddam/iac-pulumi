@@ -32,10 +32,12 @@ rds_engine = config.require('rds_engine')
 rds_engine_version = config.require('rds_engine_version')
 rds_identifier = config.require('rds_identifier')
 domain_name = config.require('domain_name')
-
+MAIL_GUN_API_KEY = config.require('MAIL_GUN_API_KEY')
+MAIL_GUN_DOMAIN = config.require('MAIL_GUN_DOMAIN')
+gcs_bucket_name = config.require('gcs_bucket_name')
 
 gcs_bucket = gcp.storage.Bucket("gcs_bucket",
-    name= 'demobucketsahithi1',
+    name= gcs_bucket_name,
     force_destroy=True,
     location="US",
     public_access_prevention='enforced',
@@ -131,10 +133,15 @@ dynamodb_table = aws.dynamodb.Table("dynamodb-table",
         aws.dynamodb.TableAttributeArgs(
             name="UserEmail",
             type="S",
+        ),
+        aws.dynamodb.TableAttributeArgs(
+            name="Timestamp",
+            type="S",
         )
     ],
     billing_mode="PROVISIONED",
     hash_key="UserEmail",
+    range_key="Timestamp",
     read_capacity=20,
     tags={
         "Environment": "dev",
@@ -172,8 +179,8 @@ testLambda = aws.lambda_.Function("testLambda",
     environment=aws.lambda_.FunctionEnvironmentArgs(
         variables={
             "GCS_BUCKET_NAME": gcs_bucket.name,
-            "MAILGUN_API_KEY": "1cbbf5398d1f07504fdce143074e1296-30b58138-110fb265",
-            "MAILGUN_DOMAIN": "csyenscc.me",
+            "MAILGUN_API_KEY": MAIL_GUN_API_KEY,
+            "MAILGUN_DOMAIN": MAIL_GUN_DOMAIN,
             "GCP_KEY": access_key.private_key,
             "DYNAMODB_NAME": dynamodb_table.name
         },
