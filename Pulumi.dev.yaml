@@ -2,34 +2,47 @@ encryptionsalt: v1:sYshDDmRW2Q=:v1:JlLHv2qrlNCTX1mN:BF5mr84Pjc7PUoH9VjR9vw9iXigU
 config:
   aws:profile: dev
   aws:region: us-west-1
-  cidr_block: 10.0.0.0/16
-  vpc_name: "myvpc-dev"
-  myigw_name: "myigw-dev"
-  ami_id: "ami-0fbc086e1f87cf53f"
-  ssh_cidr_blocks: ['73.218.147.89/32']
-  http_cidr_blocks: ['0.0.0.0/0']
-  https_cidr_blocks: ['0.0.0.0/0']
-  webport_cidr_blocks: ['0.0.0.0/0']
-  webapp_port: 3000
-  instance_type: "t2.micro"
-  key_name: "appkey-dev-west1"
-  public_subnets_config : [
-    {"name": "public-subnet-1", "cidr_block": "10.0.1.0/24"},
-    {"name": "public-subnet-2", "cidr_block": "10.0.2.0/24"},
-    {"name": "public-subnet-3", "cidr_block": "10.0.3.0/24"}
-  ]
-  private_subnets_config : [
-    {"name": "private-subnet-1", "cidr_block": "10.0.4.0/24"},
-    {"name": "private-subnet-2", "cidr_block": "10.0.5.0/24"},
-    {"name": "private-subnet-3", "cidr_block": "10.0.6.0/24"}
-  ]
-  destination_route_cidr: 0.0.0.0/0
-  ENV_FILE_PATH: "/opt/csye6225/webapp/.env"
-  DB_USER: csye6225
-  DB_PASSWORD: passworD99
-  DB_NAME: csye6225
-  rds_instance_class: "db.t2.micro"
-  rds_engine: "mariadb"
-  rds_engine_version: "10.6"
-  rds_identifier: "csye6225"
-  domain_name: "dev.csyenscc.me"
+  gcp:project: gcp-dev-406420
+  iac-pulumi-01:AWS_REGION: us-west-1
+  iac-pulumi-01:MAIL_GUN_API_KEY: "1cbbf5398d1f07504fdce143074e1296-30b58138-110fb265"
+  iac-pulumi-01:MAIL_GUN_DOMAIN: "csyenscc.me"
+  iac-pulumi-01:gcs_bucket_name: 'demobucketsahithi1'
+  iac-pulumi-01:DB_NAME: csye6225
+  iac-pulumi-01:DB_PASSWORD: passworD99
+  iac-pulumi-01:DB_USER: csye6225
+  iac-pulumi-01:ENV_FILE_PATH: /opt/csye6225/webapp/.env
+  iac-pulumi-01:ami_id: ami-0baaccf29208734d1
+  iac-pulumi-01:cidr_block: 10.0.0.0/16
+  iac-pulumi-01:destination_route_cidr: 0.0.0.0/0
+  iac-pulumi-01:domain_name: dev.csyenscc.me
+  iac-pulumi-01:http_cidr_blocks:
+    - 0.0.0.0/0
+  iac-pulumi-01:https_cidr_blocks:
+    - 0.0.0.0/0
+  iac-pulumi-01:instance_type: t2.micro
+  iac-pulumi-01:key_name: appkey-dev-west1
+  iac-pulumi-01:myigw_name: myigw-dev
+  iac-pulumi-01:private_subnets_config:
+    - cidr_block: 10.0.4.0/24
+      name: private-subnet-1
+    - cidr_block: 10.0.5.0/24
+      name: private-subnet-2
+    - cidr_block: 10.0.6.0/24
+      name: private-subnet-3
+  iac-pulumi-01:public_subnets_config:
+    - cidr_block: 10.0.1.0/24
+      name: public-subnet-1
+    - cidr_block: 10.0.2.0/24
+      name: public-subnet-2
+    - cidr_block: 10.0.3.0/24
+      name: public-subnet-3
+  iac-pulumi-01:rds_engine: mariadb
+  iac-pulumi-01:rds_engine_version: "10.6"
+  iac-pulumi-01:rds_identifier: csye6225
+  iac-pulumi-01:rds_instance_class: db.t2.micro
+  iac-pulumi-01:ssh_cidr_blocks:
+    - 73.218.147.89/32
+  iac-pulumi-01:vpc_name: myvpc-dev
+  iac-pulumi-01:webapp_port: "3000"
+  iac-pulumi-01:webport_cidr_blocks:
+    - 0.0.0.0/0
