@@ -9,6 +9,7 @@ public_subnets = []
 private_subnets = []
 
 config = pulumi.Config()
+DOMAIN = config.require('DOMAIN')
 aws_region = config.require('AWS_REGION')
 vpc_name = config.require('vpc_name')
 igw_name = config.require('myigw_name')
@@ -201,13 +202,6 @@ loadbalancer_sg = aws.ec2.SecurityGroup("loadbalancer security group",
     vpc_id=create_vpc.id,
     ingress=[
     aws.ec2.SecurityGroupIngressArgs(
-        description="HTTP",
-        from_port=80,
-        to_port=80,
-        protocol="tcp",
-        cidr_blocks=http_cidr_blocks,
-    ),
-    aws.ec2.SecurityGroupIngressArgs(
         description="HTTPS",
         from_port=443,
         to_port=443,
@@ -299,6 +293,7 @@ database_instance = aws.rds.Instance("database instance",
 db_endpoint = database_instance.endpoint.apply(lambda endpoint: f'{endpoint}')
 
 ec2_role = aws.iam.Role("ec2Role",
+    name="ec2Role",
     assume_role_policy=json.dumps({
         "Version": "2012-10-17",
         "Statement": [{
@@ -326,6 +321,7 @@ SNSPolicyAttachment = aws.iam.PolicyAttachment("SNSPolicyAttachment",
 instance_profile = aws.iam.InstanceProfile("instanceProfile", role=ec2_role.name)
 
 my_instance_template = aws.ec2.LaunchTemplate("my_instance_template",
+    name="demoTemplate",
     block_device_mappings=[aws.ec2.LaunchTemplateBlockDeviceMappingArgs(
         device_name="/dev/xvda",
         ebs=aws.ec2.LaunchTemplateBlockDeviceMappingEbsArgs(
@@ -383,6 +379,7 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
 )
 
 asg = aws.autoscaling.Group("asg",
+    name="demoasg",
     desired_capacity=1,
     max_size=3,
     min_size=1,
@@ -452,6 +449,9 @@ alb = aws.lb.LoadBalancer("alb",
     tags={
         "Environment": "dev",
     })
+certificate_issued = aws.acm.get_certificate(domain=DOMAIN,
+    most_recent=True,
+    statuses=["ISSUED"])
 
 targetGroup = aws.lb.TargetGroup("targetGroup",
     port=3000,
@@ -464,8 +464,9 @@ targetGroup = aws.lb.TargetGroup("targetGroup",
 
 listener = aws.lb.Listener("listener",
     load_balancer_arn=alb.arn,
-    port=80,
-    protocol="HTTP",
+    port=443,
+    protocol="HTTPS",
+    certificate_arn = certificate_issued.arn,
     default_actions=[aws.lb.ListenerDefaultActionArgs(
         type="forward",
         target_group_arn=targetGroup.arn,
