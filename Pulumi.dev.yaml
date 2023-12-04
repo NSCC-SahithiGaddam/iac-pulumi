@@ -3,6 +3,7 @@ config:
   aws:profile: dev
   aws:region: us-west-1
   gcp:project: gcp-dev-406420
+  iac-pulumi-01:DOMAIN: dev.csyenscc.me
   iac-pulumi-01:AWS_REGION: us-west-1
   iac-pulumi-01:MAIL_GUN_API_KEY: "1cbbf5398d1f07504fdce143074e1296-30b58138-110fb265"
   iac-pulumi-01:MAIL_GUN_DOMAIN: "csyenscc.me"

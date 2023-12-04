@@ -3,6 +3,7 @@ config:
   aws:profile: demo
   aws:region: us-west-1
   gcp:project: gcp-demo-406420
+  iac-pulumi-01:DOMAIN: demo.csyenscc.me
   iac-pulumi-01:AWS_REGION: us-west-1
   iac-pulumi-01:MAIL_GUN_API_KEY: "1cbbf5398d1f07504fdce143074e1296-30b58138-110fb265"
   iac-pulumi-01:MAIL_GUN_DOMAIN: "csyenscc.me"
@@ -11,7 +12,7 @@ config:
   iac-pulumi-01:DB_PASSWORD: passworD99
   iac-pulumi-01:DB_USER: csye6225
   iac-pulumi-01:ENV_FILE_PATH: /opt/csye6225/webapp/.env
-  iac-pulumi-01:ami_id: ami-0390f20883ff79963
+  iac-pulumi-01:ami_id: ami-0aafdae616ee7c9b7
   iac-pulumi-01:cidr_block: 10.0.0.0/16
   iac-pulumi-01:destination_route_cidr: 0.0.0.0/0
   iac-pulumi-01:domain_name: demo.csyenscc.me
